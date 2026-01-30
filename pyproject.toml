@@ -1,0 +1,16 @@
+[project]
+name = "pysar3d"
+version = "0.1.0"
+description = "Library for reconstruction of 3D SAR images from measurement or simulation data."
+readme = "README.md"
+authors = [
+    { name = "Matthew Dvorsky", email = "matthew.ryan.dvorsky@gmail.com" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "jax>=0.9.0",
+]
+
+[build-system]
+requires = ["uv_build>=0.9.25,<0.10.0"]
+build-backend = "uv_build"
