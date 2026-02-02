@@ -37,22 +37,8 @@ def _kernel_oneWay_scalar(x, y, k0, tx, ty, tz, tSigma):
 
 @partial(jnp.vectorize, excluded=(3, 4, 5, 6))
 def _monostatic_helper(x, y, k0, tx, ty, tz, tSigma):
-    print(x.shape)
-    print(y.shape)
-    print(k0.shape)
-    print(tx.shape)
-    print(ty.shape)
-    print(tz.shape)
-    print(tSigma.shape)
     return map_sum(_kernel_oneWay_scalar, x, y, k0, tx, ty, tz, tSigma)
 
 
 def simulateSarMonostatic(x, y, k0, tx, ty, tz, tSigma):
-    print(x.shape)
-    print(y.shape)
-    print(k0.shape)
-    print(tx.shape)
-    print(ty.shape)
-    print(tz.shape)
-    print(tSigma.shape)
     return _monostatic_helper(x, y, k0, tx, ty, tz, tSigma)
