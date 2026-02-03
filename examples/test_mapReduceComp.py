@@ -10,8 +10,8 @@ v2 = jax.random.normal(key, [256 * 126])
 
 
 def _kernelFun(x, y) -> jax.Array:
-    # return jnp.hypot(x, 2 * y)
-    return jnp.cos(x - 2 * y)
+    return jnp.hypot(x, 2 * y)
+    # return jnp.cos(x - 2 * y)
 
 
 @jax.jit
