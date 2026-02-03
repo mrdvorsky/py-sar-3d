@@ -27,14 +27,14 @@ def testFun3(x, y, z):
             None,
         )
 
-    return jax.lax.scan(bodyFun, jnp.zeros([128, 1024*16, 512*2]), (x, y), unroll=16)[0]
+    return jax.lax.scan(bodyFun, jnp.zeros([128, 1024*16, 512]), (x, y), unroll=16)[0]
 
 
 # Run
 key = jax.random.PRNGKey(21312)
-x = jax.random.normal(key, [32, 128, 1024*16, 1])
-y = jax.random.normal(key, [32, 128, 1, 512*2])
-z = jax.random.normal(key, [1, 1, 1024*16, 512*2])
+x = jax.random.normal(key, [4, 128, 1024*16, 1])
+y = jax.random.normal(key, [4, 128, 1, 512])
+z = jax.random.normal(key, [1, 1, 1024*16, 512])
 
 exportGraph("dot_files/test_mixed_1.dot", testFun1, x, y, z)
 exportGraph("dot_files/test_mixed_2.dot", testFun2, x, y, z)
