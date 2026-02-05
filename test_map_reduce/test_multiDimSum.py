@@ -1,3 +1,5 @@
+import math
+
 import jax
 import jax.numpy as jnp
 
@@ -7,88 +9,119 @@ from jax_utils import time_it, exportGraph
 @jax.jit
 def _kernelFun(x, y, z) -> jax.Array:
     return x**2 + y - 3.0 * z
-    return jnp.hypot(x, y + 2 * z)
-    return jnp.cos(x - y + z)
+    # return jnp.hypot(x, y + 2 * z)
+    # return jnp.cos(x - y + z)
 
 
 @jax.jit
-def testFun1(x, y, z):
-    return jnp.sum(_kernelFun(x, y, z), axis=0)
+def testDirect(x, y, z):
+    return jnp.sum(_kernelFun(x, y, z), axis=[2, 3])
 
 
 @jax.jit
-def testFun3(x, y, z):
-    x = jnp.transpose(x, (2, 0, 1))
-    y = jnp.transpose(y, (2, 0, 1))
-    z = jnp.transpose(z, (2, 0, 1))
-    y_squeezed = jnp.squeeze(y, axis=0)
+def testScan(x, y, z):
+    @jax.jit
+    def _helperScan(x, yS, z):
+        def bodyFun(carry, inputs):
+            xS, zS = inputs
+            return (carry + _kernelFun(xS, yS, zS), None)
+
+        return jax.lax.scan(
+            bodyFun,
+            jnp.zeros([1]),
+            (x, z),
+            unroll=16,
+        )[0][0]
+
+    bShape = jnp.broadcast_shapes(x.shape, y.shape, z.shape)
+    x = jnp.reshape(x, (x.shape[0], x.shape[1], x.shape[2] * x.shape[3]))
+    y = jnp.reshape(y, (y.shape[0], y.shape[1], y.shape[2] * y.shape[3]))
+    z = jnp.broadcast_to(z, (z.shape[0], z.shape[1], bShape[2], bShape[3]))
+    z = jnp.reshape(z, (z.shape[0], z.shape[1], bShape[2] * bShape[3]))
+
+    return jnp.vectorize(_helperScan, signature="(m),(1),(m)->()")(x, y, z)
+
+
+@jax.jit
+def _helperMulti2(xa, ys, za):
+    ys = jnp.squeeze(ys, axis=0)
 
     def bodyFun(carry, inputs):
         xs, zs = inputs
-        return (carry + _kernelFun(xs, y_squeezed, zs), None)
+        return (carry + _kernelFun(xs, ys, zs), None)
 
     return jax.lax.scan(
         bodyFun,
-        jnp.zeros([y.shape[1], y.shape[2]]),
-        (x, z),
+        0,
+        (xa, za),
+        unroll=16,
+    )[0]
+
+
+@jax.jit
+def _helperMulti1(xa, ys, zs):
+    ys = jnp.squeeze(ys, axis=0)
+    zs = jnp.squeeze(zs, axis=0)
+
+    def bodyFun(carry, inputs):
+        xs = inputs
+        return (carry + _helperMulti2(xs, ys, zs), None)
+
+    return jax.lax.scan(
+        bodyFun,
+        0,
+        xa,
         unroll=1,
     )[0]
 
 
 @jax.jit
-def _helper4(x, yS, z):
-    def bodyFun(carry, inputs):
-        xS, zS = inputs
-        return (carry + _kernelFun(xS, yS, zS), None)
+def testScanMulti(x, y, z):
+    return jnp.vectorize(_helperMulti1, signature="(m,n),(1,1),(1,n)->()")(x, y, z)
+
+
+@jax.jit
+def _helperLinear(x: jax.Array, y: jax.Array, z: jax.Array):
+    shape = jnp.broadcast_shapes(x.shape, y.shape, z.shape)
+    subsAll = jnp.indices(shape)
+
+    def bodyFun(carry, subs):
+        s1,s2 = subs
+        return (carry + _kernelFun(x[s2, s1], y[0, 0], z[0, s1]), None)
 
     return jax.lax.scan(
         bodyFun,
-        jnp.zeros([1]),
-        (x, z),
+        0,
+        (subsAll[0].ravel(), subsAll[1].ravel()),
         unroll=16,
-    )[0][0]
+    )[0]
 
 
 @jax.jit
-def testFun4(x, y, z):
-    return jnp.vectorize(_helper4, signature="(m),(1),(m)->()")(x, y, z)
-
-
-def getAllRavelIndices(*args: jax.Array):
-    shape = jnp.broadcast_shapes(*[a.shape for a in args])
-    subsAll = jnp.indices(shape, sparse=True)
-    subsAll = jnp.broadcast_arrays(*subsAll)
-    return tuple(
-        jnp.ravel_multi_index(subsAll, a.shape, mode="wrap").ravel() for a in args
-    )
-
-
-
-@jax.jit
-def testFun5(x, y, z):
-    return jnp.vectorize(_helper5, signature="(m),(1),(m)->()")(x, y, z)
+def testScanMultiLinear(x, y, z):
+    return jnp.vectorize(_helperLinear, signature="(m,n),(1,1),(1,n)->()")(x, y, z)
 
 
 ### Testing ###
 key = jax.random.PRNGKey(10)
-x = jax.random.normal(key, [1024, 1,    32, 32])
-y = jax.random.normal(key, [1024, 2048, 1,  1])
-z = jax.random.normal(key, [1, 2048,    1,  32])
+x = jax.random.normal(key, [1024, 1, 256 * 1, 32])
+y = jax.random.normal(key, [1024, 1000, 1, 1])
+z = jax.random.normal(key, [1, 1000, 1, 32])
 
 
-# exportGraph("dot_files/test1.dot", testFun1, x, y, z)
-# exportGraph("dot_files/test2.dot", testFun2, x, y, z)
-# exportGraph("dot_files/test3.dot", testFun3, x, y, z)
-# exportGraph("dot_files/test4.dot", testFun4, x, y, z)
-exportGraph("dot_files/test5.dot", testFun5, x, y, z)
+# exportGraph("dot_files/testDirect.dot", testDirect, x, y, z)
+exportGraph("dot_files/testScan.dot", testScan, x, y, z)
+exportGraph("dot_files/testScanMulti.dot", testScanMulti, x, y, z)
+exportGraph("dot_files/testScanMultiLinear.dot", testScanMultiLinear, x, y, z)
 
-time_it(testFun1, x, y, z)
-# time_it(testFun2, x, y, z)
-# time_it(testFun3, x, y, z)
-# time_it(testFun4, x, y, z)
-# time_it(testFun5, x, y, z)
+# time_it(testDirect, x, y, z)
+time_it(testScan, x, y, z)
+time_it(testScanMulti, x, y, z)
+time_it(testScanMultiLinear, x, y, z)
 
 
-# shape = (2, 3, 4)
+# print(testDirect(x, y, z).shape)
+# print(testScan(x, y, z).shape)
+# print(testScanMulti(x, y, z).shape)
 
-# print(*getAllRavelIndices(jnp.zeros([2, 1]), jnp.zeros([2, 3])), sep="\n\n")
+# print(jnp.max(jnp.abs(testScanMulti(x, y, z) - testDirect(x, y, z))))
