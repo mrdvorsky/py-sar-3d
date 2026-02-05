@@ -1,3 +1,4 @@
+from jax.extend.mlir.dialects.memref import dim
 from typing import Callable, Sequence
 import jax
 import jax.numpy as jnp
@@ -5,8 +6,15 @@ import jax.numpy as jnp
 # TODO: Try linear indexing vs. multi-scan
 
 
-def _map_reduce_recursion():
-    pass
+def _map_reduce_recursion(
+    dim_count: int,
+    map_fun: Callable[..., jax.Array],
+    *args: jax.Array,
+):
+    if dim_count == 0:
+        return map_fun(*args)
+    
+    shape = jnp.broadcast_shapes(*(a.shape for a in args))
 
 
 @jax.jit(static_argnames=("map_fun", "axis"))
@@ -15,13 +23,14 @@ def _map_reduce_core(
     *args: jax.Array,
     axis: tuple[int, ...],
 ) -> jax.Array:
-    shape = jnp.broadcast_shapes(*[a.shape for a in args])
+    shape = jnp.broadcast_shapes(*(a.shape for a in args))
     args = tuple(jnp.moveaxis(a, axis, range(len(axis))) for a in args)
 
     print(*args, sep="\n")
     return
 
 
+@jax.jit(static_argnames=("map_fun", "axis"))
 def _map_reduce_checker(
     map_fun: Callable[..., jax.Array],
     *args: jax.Array,
@@ -49,4 +58,4 @@ def _kernelFun(a, b):
     return a + b
 
 
-map_reduce(_kernelFun, jnp.zeros([2, 3, 4, 5]), jnp.zeros([1, 3, 1, 5]), axis=[2, 3])
+map_reduce(_kernelFun, jnp.zeros([2, 3, 4, 5]), jnp.zeros([1, 3, 1, 5]), axis=[3, 2])
