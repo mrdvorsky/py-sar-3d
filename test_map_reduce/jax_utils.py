@@ -1,4 +1,3 @@
-from typing import Any
 import jax
 from jaxlib import xla_client
 import time
@@ -34,10 +33,12 @@ def time_it(func, *args, warm_up=True, **kwargs):
     return result
 
 
-def exportGraph(filename: str, fn, *args):
-    lowered = jax.jit(fn).lower(*args)
+def exportGraph(filename: str, fn: jax.stages.Wrapped, *args):
+    lowered = fn.lower(*args)
     compiled = lowered.compile()
-    proto = compiled.runtime_executable().hlo_modules()[0].as_serialized_hlo_module_proto()  # ty:ignore[possibly-missing-attribute]
+    proto = (
+        compiled.runtime_executable().hlo_modules()[0].as_serialized_hlo_module_proto()  # type: ignore
+    )
     compute = xla_client.XlaComputation(proto)
 
     with open(filename, "w") as f:
