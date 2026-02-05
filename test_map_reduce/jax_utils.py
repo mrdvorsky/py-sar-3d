@@ -1,7 +1,8 @@
+from contextlib import contextmanager
+import time
+
 import jax
 from jaxlib import xla_client
-import time
-from contextlib import contextmanager
 
 
 @contextmanager
@@ -33,13 +34,17 @@ def time_it(func, *args, warm_up=True, **kwargs):
     return result
 
 
-def exportGraph(filename: str, fn: jax.stages.Wrapped, *args):
+def exportGraph(fn: jax.stages.Wrapped, *args, folder="dot_files"):
     lowered = fn.lower(*args)
     compiled = lowered.compile()
-    proto = (
-        compiled.runtime_executable().hlo_modules()[0].as_serialized_hlo_module_proto()  # type: ignore
-    )
+    modules = compiled.runtime_executable().hlo_modules()  # type: ignore
+
+    if len(modules) != 1:
+        raise ValueError(f"Number of modules should be (1), but is actually ({len(modules)})")
+
+    proto = modules[0].as_serialized_hlo_module_proto()
     compute = xla_client.XlaComputation(proto)
 
+    filename = f"{folder}/{fn.__qualname__}.dot"
     with open(filename, "w") as f:
         f.write(compute.as_hlo_dot_graph())
