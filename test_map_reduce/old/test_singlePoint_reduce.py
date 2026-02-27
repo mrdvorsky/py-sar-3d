@@ -4,7 +4,7 @@ from math import prod
 import jax
 import jax.numpy as jnp
 
-from jax_utils import exportGraph
+from jax_utils import export_graph
 
 
 @partial(jax.jit, static_argnums=(0, ))
@@ -17,7 +17,7 @@ def calcululate1(shape: tuple[int, ...]):
 # print(jax.make_jaxpr(calcululate1)(jnp.empty([1000000])))
 
 
-exportGraph("dot_files/single1.dot", calcululate1, (16, 16, 16, 16, 16, 16, 16, 16, 16))
+export_graph("dot_files/single1.dot", calcululate1, (16, 16, 16, 16, 16, 16, 16, 16, 16))
 
 print(calcululate1((16, 16, 16, 16, 16, 16, 16, 16, 16)))
 

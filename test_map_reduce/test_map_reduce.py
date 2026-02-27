@@ -1,8 +1,10 @@
 import jax
 import jax.numpy as jnp
 
-from jax_map_reduce import map_reduce
-from jax_utils import time_it, exportGraph
+
+
+# from jax_map_reduce import map_reduce
+# from jax_utils import time_it, export_graph
 
 
 
@@ -13,19 +15,22 @@ def _kernel(x, y):
 
 @jax.jit
 def test1(x, y):
-    return map_reduce(_kernel, x, y, axis=[2, 3], unroll_count=1)
+    return map_reduce(_kernel, x, y, axis=[0, 1], unroll_count=1)
 
 @jax.jit
 def test2(x, y):
-    return map_reduce(_kernel, x, y, axis=[3, 2], unroll_count=1)
+    return map_reduce(_kernel, x, y, axis=[0, 2], unroll_count=1)
 
 
-x = jnp.zeros([1024, 1, 1000, 1])
-y = jnp.zeros([1, 2000, 1, 32])
+# x = jnp.zeros([1024, 1, 1000, 33])
+# y = jnp.zeros([1024, 2000, 1, 1])
+
+x = jnp.zeros([33, 1024, 1024, 1])
+y = jnp.zeros([1, 1, 1024, 2000])
 
 
-exportGraph(test1, x, y)
-exportGraph(test2, x, y)
+export_graph(test1, x, y)
+export_graph(test2, x, y)
 
 time_it(test1, x, y)
 time_it(test2, x, y)

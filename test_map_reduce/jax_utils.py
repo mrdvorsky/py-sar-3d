@@ -7,14 +7,12 @@ from jaxlib import xla_client
 
 @contextmanager
 def jax_timer(label="Execution"):
-    # Ensure all previous device activity is finished
     jax.effects_barrier()
     start = time.perf_counter()
+
     try:
         yield
     finally:
-        # This is the "secret sauce" for JAX
-        # We need to wait for the computation to actually finish
         jax.effects_barrier()
         end = time.perf_counter()
         print(f"{label}: {end - start:.6f} seconds")
@@ -25,7 +23,6 @@ def time_it(func, *args, warm_up=True, **kwargs):
     A wrapper to time a JAX function properly.
     """
     if warm_up:
-        # Run once to JIT compile without timing
         _ = func(*args, **kwargs).block_until_ready()
 
     with jax_timer(label=f"Timing {func.__name__}"):
@@ -34,7 +31,7 @@ def time_it(func, *args, warm_up=True, **kwargs):
     return result
 
 
-def exportGraph(fn: jax.stages.Wrapped, *args, folder="dot_files"):
+def export_graph(fn: jax.stages.Wrapped, *args, folder="dot_files"):
     lowered = fn.lower(*args)
     compiled = lowered.compile()
     modules = compiled.runtime_executable().hlo_modules()  # type: ignore

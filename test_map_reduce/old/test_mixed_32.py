@@ -3,7 +3,7 @@ import jax
 import jax.numpy as jnp
 
 
-from jax_utils import exportGraph, time_it
+from jax_utils import export_graph, time_it
 
 
 
@@ -41,8 +41,8 @@ z = jax.random.normal(key, [1024, 1, 1024])
 # y = jax.random.normal(key, [1, 1024, 32, 1])
 # z = jax.random.normal(key, [1, 1, 32, 32])
 
-exportGraph("dot_files/test_2d_1.dot", testFun1, x, y, z)
-exportGraph("dot_files/test_2d_2.dot", testFun2, x, y, z)
+export_graph("dot_files/test_2d_1.dot", testFun1, x, y, z)
+export_graph("dot_files/test_2d_2.dot", testFun2, x, y, z)
 
 
 time_it(testFun1, x, y, z)

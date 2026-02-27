@@ -1,7 +1,7 @@
 import jax
 import jax.numpy as jnp
 
-from jax_utils import exportGraph, time_it
+from jax_utils import export_graph, time_it
 
 
 key = jax.random.PRNGKey(21312)

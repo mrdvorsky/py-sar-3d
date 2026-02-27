@@ -3,7 +3,7 @@ from functools import partial
 import jax
 import jax.numpy as jnp
 
-from jax_utils import exportGraph, time_it
+from jax_utils import export_graph, time_it
 
 print(jax.devices())
 
@@ -155,7 +155,7 @@ y = jax.random.normal(key, [1, 256])
 x0 = jax.random.normal(key, [32, 32, 32, 8, 1])
 y0 = jax.random.normal(key, [32, 32, 32, 8, 1])
 
-exportGraph("dot_files/test_2d_1.dot", testFun1, x, y, x0, y0)
+export_graph("dot_files/test_2d_1.dot", testFun1, x, y, x0, y0)
 # exportGraph("dot_files/test_2d_2.dot", testFun2, x, y, x0, y0)
 # exportGraph("dot_files/test_2d_3.dot", testFun3, x, y, x0, y0)
 # exportGraph("dot_files/test_2d_4.dot", testFun4, x, y, x0, y0)

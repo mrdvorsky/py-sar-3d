@@ -3,7 +3,7 @@ from functools import partial
 import jax
 import jax.numpy as jnp
 
-from jax_utils import exportGraph, time_it
+from jax_utils import export_graph, time_it
 
 
 @jax.jit
@@ -50,8 +50,8 @@ key = jax.random.PRNGKey(21312)
 x = jax.random.normal(key, [256*256])
 y = jax.random.normal(key, [256*128])
 
-exportGraph("dot_files/test_2d_1.dot", testFun1, x, y)
-exportGraph("dot_files/test_2d_2.dot", testFun2, x, y)
+export_graph("dot_files/test_2d_1.dot", testFun1, x, y)
+export_graph("dot_files/test_2d_2.dot", testFun2, x, y)
 
 
 time_it(testFun1, x, y)

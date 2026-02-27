@@ -4,6 +4,7 @@ import jax.numpy as jnp
 
 
 # TODO: Try linear indexing vs. multi-scan
+# TODO: Combine dimensions in opt stage
 
 
 def _map_reduce_recursion(
@@ -67,6 +68,7 @@ def _map_reduce_core(
     unroll_count: int,
 ) -> jax.Array:
     arrays_optimized = _map_reduce_optimize_dims(arrays, axis=axis)
+    print(arrays_optimized[0].shape, arrays_optimized[1].shape)
     return _map_reduce_recursion(map_fun, out_shape, arrays_optimized, unroll_count)
 
 
