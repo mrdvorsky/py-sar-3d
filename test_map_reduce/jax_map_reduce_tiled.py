@@ -28,18 +28,6 @@ def _sub_to_linear(
     return tuple(ret)
 
 
-# def _sub_to_linear(
-#     virtual_subs: tuple[jax.Array, ...],
-#     concrete_shapes: tuple[tuple[int, ...], ...],
-# ) -> tuple[jax.Array, ...]:
-#     ret: list[jax.Array] = []
-
-#     for shape in concrete_shapes:
-#         ret.append(jnp.ravel_multi_index(virtual_subs, shape, mode="wrap"))
-
-#     return tuple(ret)
-
-
 # @jax.jit(static_argnames=("linear_stride", "virtual_shape"))
 def _increment_subs(
     virtual_subs: tuple[jax.Array, ...],
