@@ -9,7 +9,7 @@ from jax_utils import time_it, export_graph
 
 ### Tests
 def _kernel(x, y):
-    return x + x * y - 2 * y + 3.0 * x**2
+    return x + x * y - 2 * y + 0.1 * x**2
     return jnp.cos(x - y)
 
 
