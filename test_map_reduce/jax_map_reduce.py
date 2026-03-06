@@ -55,8 +55,11 @@ def _map_reduce_recursion(
 def _map_reduce_optimize_dims(
     arrays: tuple[jax.Array, ...],
     axis: tuple[int, ...],
-) -> tuple[jax.Array, ...]:
-    return tuple(jnp.moveaxis(a, axis, range(len(axis))) for a in arrays)
+) -> tuple[tuple[jax.Array, ...], tuple[int, ...]]:
+    return (
+        tuple(jnp.moveaxis(a, axis, range(len(axis))) for a in arrays),
+        tuple(range(len(axis))),
+    )
 
 
 @jax.jit(static_argnames=("map_fun", "axis", "unroll_count"))
@@ -67,9 +70,8 @@ def _map_reduce_core(
     axis: tuple[int, ...],
     unroll_count: int,
 ) -> jax.Array:
-    arrays_optimized = _map_reduce_optimize_dims(arrays, axis=axis)
-    print(arrays_optimized[0].shape, arrays_optimized[1].shape)
-    return _map_reduce_recursion(map_fun, out_shape, arrays_optimized, unroll_count)
+    arrays, axis = _map_reduce_optimize_dims(arrays, axis)
+    return _map_reduce_recursion(map_fun, out_shape, arrays, unroll_count)
 
 
 def map_reduce(
