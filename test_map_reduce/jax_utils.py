@@ -18,7 +18,7 @@ def jax_timer(label="Execution"):
         print(f"{label}: {end - start:.6f} seconds")
 
 
-def time_it(func, *args, warm_up=True, **kwargs):
+def time_it(func, *args, warm_up=True, num_reps=1, **kwargs):
     """
     A wrapper to time a JAX function properly.
     """
@@ -26,7 +26,9 @@ def time_it(func, *args, warm_up=True, **kwargs):
         _ = func(*args, **kwargs).block_until_ready()
 
     with jax_timer(label=f"Timing {func.__name__}"):
-        result = func(*args, **kwargs).block_until_ready()
+        result = None
+        for i in range(num_reps):
+            result = func(*args, **kwargs).block_until_ready()
 
     return result
 
@@ -49,25 +51,3 @@ def export_graph(fn: jax.stages.Wrapped, *args, folder="dot_files"):
         f.write(compute.as_hlo_dot_graph())
 
 
-@contextmanager
-def torch_timer(label="Execution"):
-    start = time.perf_counter()
-
-    try:
-        yield
-    finally:
-        end = time.perf_counter()
-        print(f"{label}: {end - start:.6f} seconds")
-
-
-def time_it_torch(func, *args, warm_up=True, **kwargs):
-    """
-    A wrapper to time a JAX function properly.
-    """
-    if warm_up:
-        _ = func(*args, **kwargs)
-
-    with torch_timer(label=f"Timing {func.__name__}"):
-        result = func(*args, **kwargs)
-
-    return result
