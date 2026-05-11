@@ -30,8 +30,8 @@ def test2(x, y, axis):
 # y = jnp.ones([32, 32, 1, 2000])
 
 key = jax.random.PRNGKey(10)
-x = jax.random.normal(key, [100, 1, 3, 1024, 1])
-y = jax.random.normal(key, [100, 64, 1, 1, 1000])
+x = jax.random.normal(key, [100, 1, 64, 1024, 1])
+y = jax.random.normal(key, [100, 3, 1, 1, 1000])
 reduce_axis = (0, 1, 2)
 
 export_graph(test1, x, y, reduce_axis)
